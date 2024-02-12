@@ -38,11 +38,15 @@ class FaceContourGraphic(
             imageRect.width().toFloat(),
             face.boundingBox
         )
-        canvas?.drawRect(rect, boxPaint)
+
+        val faceSizeThreshold = 0.05f
+        val faceSize = (rect.width() * rect.height()).toFloat() / (imageRect.width() * imageRect.height())
+        if (faceSize > faceSizeThreshold) {
+            canvas?.drawRect(rect, boxPaint)
+        }
     }
 
     companion object {
         private const val BOX_STROKE_WIDTH = 15.0f
     }
-
 }

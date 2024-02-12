@@ -34,6 +34,10 @@
             </intent-filter>
         </activity>
 
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="face" />
+
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />

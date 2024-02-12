@@ -13,6 +13,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.google.mlkit.vision.face.Face
 import com.heyjom.taylorsfacedetector.face_detection.FaceContourDetectionListener
 import com.heyjom.taylorsfacedetector.face_detection.FaceContourDetectionProcessor
 import java.util.concurrent.ExecutorService
@@ -90,3 +91,5 @@ class CameraManager(
         private const val TAG = "CameraXBasic"
     }
 }
+
+

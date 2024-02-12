@@ -24,12 +24,13 @@ class FaceContourDetectionProcessor(
     private val listener: FaceContourDetectionListener
 ) : BaseImageAnalyzer<List<Face>>() {
 
-    private val realTimeOpts = FaceDetectorOptions.Builder()
-        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
-        .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
+    val highAccuracyOpts = FaceDetectorOptions.Builder()
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
         .build()
 
-    private val detector = FaceDetection.getClient(realTimeOpts)
+    private val detector = FaceDetection.getClient(highAccuracyOpts)
 
     override val graphicOverlay: GraphicOverlay
         get() = view
@@ -45,8 +46,6 @@ class FaceContourDetectionProcessor(
             Log.e(TAG, "Exception thrown while trying to close Face Detector: $e")
         }
     }
-
-
 
 
     override fun onSuccess(

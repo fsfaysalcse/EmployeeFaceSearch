@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TaylorsFaceDetector</string>
+    <string name="app_name">Face Unlock</string>
     <string name="switch_camera">Switch Camera</string>
     <string name="face_crop">Face Crop</string>
 </resources>

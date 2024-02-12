@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlinx-serialization'
 }
 
 android {
@@ -49,8 +50,14 @@ dependencies {
     // ML Kit Face Detection
     implementation 'com.google.mlkit:face-detection:16.1.5'
 
-    //OkHttp
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    //Ktor
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("io.ktor:ktor-client-android:2.3.6")
+    implementation("io.ktor:ktor-client-serialization:2.3.6")
+    implementation("io.ktor:ktor-client-logging:2.3.6")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.6")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
+
 
     //Gson
     implementation 'com.google.code.gson:gson:2.10.1'

@@ -8,21 +8,24 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.gson.Gson
 import com.google.mlkit.vision.face.Face
 import com.heyjom.taylorsfacedetector.camerax.CameraManager
 import com.heyjom.taylorsfacedetector.databinding.ActivityMainBinding
 import com.heyjom.taylorsfacedetector.face_detection.FaceContourDetectionListener
-import com.heyjom.taylorsfacedetector.model.Employee
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import okio.IOException
+import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readText
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 
@@ -103,7 +106,8 @@ class MainActivity : AppCompatActivity(), FaceContourDetectionListener {
 
 
     override fun onFaceDetected(faces: List<Face>, captureBitmap: Bitmap) {
-        //  Log.d(TAG, "onFaceDetected: Face Detected ${faces.size}")
+
+        Log.d(TAG, "onFaceDetected: ${faces.size}")
 
         if (faces.isEmpty()) {
             runOnUiThread {
@@ -116,55 +120,51 @@ class MainActivity : AppCompatActivity(), FaceContourDetectionListener {
         captureBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
         val byteArray = stream.toByteArray()
 
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "photo",
-                "filename.jpg",
-                byteArray.toRequestBody("image/jpeg".toMediaTypeOrNull())
-            )
-            .build()
+        // Launch a coroutine on the IO dispatcher for network operations
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val client = HttpClient()
+                val response: HttpResponse = client.submitFormWithBinaryData(
+                    url = "http://192.168.1.107:9090/search",
+                    formData = formData {
+                        append("photo", byteArray, Headers.build {
+                            append(HttpHeaders.ContentType, "image/jpeg")
+                            append(HttpHeaders.ContentDisposition, "filename=\"filename.jpg\"")
+                        })
+                    }
+                ) {
+                    method = HttpMethod.Post
+                }
 
-        val request = Request.Builder()
-            .url("http://192.168.1.103:8080/search")
-            .post(requestBody)
-            .build()
+                // Check if the response is successful
+                if (response.status == HttpStatusCode.OK) {
+                    val responseBodyString = response.bodyAsText()
+                    withContext(Dispatchers.Main) {
+                        // Parse the JSON response
+                        val jsonResponse = JSONObject(responseBodyString)
+                        val employeeJson = jsonResponse.getJSONObject("employee")
+                        val name = employeeJson.getString("name")
 
-        OkHttpClient().newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
+                        binding.infoLayout.visibility = android.view.View.VISIBLE
+                        binding.tvName.text = name
+                        binding.face.setImageBitmap(captureBitmap)
+                    }
+                } else {
+                    Log.e(TAG, "Failed to upload image: ${response.status}")
+                    withContext(Dispatchers.Main) {
+                        binding.infoLayout.visibility = android.view.View.INVISIBLE
+                    }
+                }
+            } catch (e: Exception) {
                 Log.e(TAG, "Failed to upload image", e)
-                runOnUiThread {
+                withContext(Dispatchers.Main) {
                     Toast.makeText(applicationContext, "${e.message}", Toast.LENGTH_SHORT).show()
                     binding.infoLayout.visibility = android.view.View.INVISIBLE
                 }
             }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    val responseBodyString = response.body?.string()
-                    Log.d(TAG, "Image uploaded successfully: $responseBodyString")
-
-                    runOnUiThread {
-                        responseBodyString?.let {
-                            // Parse the JSON response manually
-                            val jsonResponse = JSONObject(it)
-                            val employeeJson = jsonResponse.getJSONObject("employee")
-                            val name = employeeJson.getString("name")
-
-                            binding.infoLayout.visibility = android.view.View.VISIBLE
-                            binding.tvName.text = name
-                            binding.face.setImageBitmap(captureBitmap)
-                        }
-                    }
-                } else {
-                    Log.e(TAG, "Failed to upload image: ${response.message}")
-                    runOnUiThread {
-                        binding.infoLayout.visibility = android.view.View.INVISIBLE
-                    }
-                }
-            }
-        })
+        }
     }
+
 
     override fun onErrors(e: Exception) {
         Log.d(TAG, "onErrors: ${e.message}")
