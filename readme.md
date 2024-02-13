@@ -1,4 +1,4 @@
-# Employee Face Detector
+# Employee Face Search
 
 ![title](https://img001.prntscr.com/file/img001/4P9PThYlQnSzjgmiEF0pVQ.png)
 
